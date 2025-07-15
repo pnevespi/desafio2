@@ -1,4 +1,4 @@
-# version: '3.8'
+version: '3.8'
 
 services:
   db:
@@ -10,7 +10,7 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - app-network
-    healthcheck: # Adicionado healthcheck para o DB
+    healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
       timeout: 20s
       retries: 10
@@ -27,22 +27,31 @@ services:
       MYSQL_DATABASE: nodedb
     depends_on:
       db:
-        condition: service_healthy # Agora o DB tem um healthcheck
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node:/app
+      - /app/node_modules
     networks:
       - app-network
-
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    # Comando entrypoint ajustado para iniciar o Nginx após a espera
-    entrypoint: /bin/sh -c "dockerize -wait tcp://node:3000 -timeout 20s nginx -g 'daemon off;'"
+    entrypoint: /bin/sh -c "nginx -g 'daemon off;'"
     ports:
       - "8080:80"
     depends_on:
       node:
-        condition: service_started # Condição adicionada para o node
+        condition: service_healthy
     networks:
       - app-network
 

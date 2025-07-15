@@ -1,0 +1,2 @@
+Observação sobre uso do dockerize: Para o node o uso do dockerize foi startado dentro do Dockerfile
+Já para o o nginx o comando dockerize foi utilizado no corpo do docker-compose.yml 
